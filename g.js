@@ -1,10 +1,10 @@
-//     (c) 2012 Rhys Brett-Bowen, Catch.com
-//     G-object may be freely distributed under the MIT license.
-//     For all details and documentation:
-//     https://github.com/rhysbrettbowen/G-closure
+// (c) 2012 Rhys Brett-Bowen, Catch.com
+// G-object may be freely distributed under the MIT license.
+// For all details and documentation:
+// https://github.com/rhysbrettbowen/G-closure
 
-goog.provide('$');
-goog.provide('$$');
+// Modified by kchang for Magazine Relaunch
+
 goog.provide('G');
 goog.provide('GG');
 
@@ -14,12 +14,12 @@ goog.require('goog.dom');
 goog.require('goog.events');
 goog.require('goog.json');
 goog.require('goog.style');
-
+goog.require('goog.Uri');
 
 
 /**
  * @param {*} input to create the G with.
- * @param {string|Element|Node=} opt_mod elemnt to look under.
+ * @param {string|Element|Node=} opt_mod element to look under.
  * @constructor
  * @return {G} the G object.
  */
@@ -78,13 +78,10 @@ G = function(input, opt_mod) {
   return /** @type {G} */(new G.init(
       /** @type {{length: number}} */(input)));
 };
+goog.exportSymbol('G', G);
 
-// remove this line if you don't want to use $
-$ = G;
 
 GG = {};
-// remove this line if you don't want to use $$
-$$ = GG;
 
 
 /** @type {number} */
@@ -129,6 +126,7 @@ GG.matchesEngine_ = null;
 GG.setSelectorEngine = function(engine) {
   GG.selectorEngine_ = engine;
 };
+goog.exportSymbol('GG.setSelectorEngine', GG.setSelectorEngine);
 
 
 /**
@@ -204,9 +202,14 @@ GG.cssFilters = {
 GG.elsBySelector = function(input, opt_mod) {
   if (input.charAt(0) == '-')
     input = '.' + input.substring(1);
+  
+  if (opt_mod && (opt_mod.constructor === G)) {
+    opt_mod = opt_mod[0]; // opt_mod can also be a G object but we need the element
+  }
 
   if(GG.selectorEngine_)
     return GG.selectorEngine_(input, opt_mod);
+  
   var ret;
   opt_mod = opt_mod || document;
   // use native querySelectorAll if available
@@ -569,6 +572,7 @@ G.prototype.each = function(fn, opt_handler) {
       });
   return this;
 };
+goog.exportSymbol('G.prototype.each', G.prototype.each);
 
 
 /**
@@ -683,16 +687,22 @@ G.prototype.get = function(ind, opt_handler) {
  * @return {*} the first element.
  */
 G.prototype.first = function() {
-  return this.get(0);
+  // return this.get(0);
+  // jQuery returns a jQuery object so that is chainable
+  return G(this.get(0));
 };
+goog.exportSymbol('G.prototype.first', G.prototype.first);
 
 
 /**
  * @return {*} the last element.
  */
 G.prototype.last = function() {
-  return this.get(-1);
+  // return this.get(-1);
+  // jQuery returns a jQuery object so that is chainable
+  return G(this.get(-1));
 };
+goog.exportSymbol('G.prototype.last', G.prototype.last);
 
 
 /**
@@ -749,6 +759,7 @@ G.prototype.remove = function(arr) {
   goog.array.remove(array, arr);
   return G(array);
 };
+goog.exportSymbol('G.prototype.remove', G.prototype.remove);
 
 
 // DOM functions
@@ -769,6 +780,7 @@ G.prototype.css = function(style, opt_val) {
   });
   return this;
 };
+goog.exportSymbol('G.prototype.css', G.prototype.css);
 
 
 /**
@@ -843,6 +855,7 @@ G.prototype.width = function(opt_input) {
   }
   return goog.style.getBounds(/** @type {Element} */(this.get(0))).width;
 };
+goog.exportSymbol('G.prototype.width', G.prototype.width);
 
 
 /**
@@ -873,6 +886,7 @@ G.prototype.height = function(opt_input) {
   }
   return goog.style.getBounds(/** @type {Element} */(this.get(0))).height;
 };
+goog.exportSymbol('G.prototype.height', G.prototype.height);
 
 
 /**
@@ -914,6 +928,7 @@ G.prototype.visible = function(opt_bool) {
 G.prototype.show = function() {
   return /** @type {G} */(this.visible(true));
 };
+goog.exportSymbol('G.prototype.show', G.prototype.show);
 
 
 /**
@@ -922,6 +937,7 @@ G.prototype.show = function() {
 G.prototype.hide = function() {
   return /** @type {G} */(this.visible(false));
 };
+goog.exportSymbol('G.prototype.hide', G.prototype.hide);
 
 
 /**
@@ -1033,6 +1049,7 @@ G.prototype.children = function(opt_selector) {
     });
   return G(arr);
 };
+goog.exportSymbol('G.prototype.children', G.prototype.children);
 
 
 /**
@@ -1045,6 +1062,7 @@ G.prototype.parent = function() {
   GG.unique(arr);
   return G(GG.grep(arr, function(el) {return el;}));
 };
+goog.exportSymbol('G.prototype.parent', G.prototype.parent);
 
 
 /**
@@ -1075,6 +1093,7 @@ G.prototype.addClass = function(className) {
   var fn = /** @type {Function} */(className);
   return this.each(function(el) {goog.dom.classes.add(el, fn(el));});
 };
+goog.exportSymbol('G.prototype.addClass', G.prototype.addClass);
 
 
 /**
@@ -1193,7 +1212,7 @@ G.prototype.after = function(input) {
     });
   }
   return this;
-}
+};
 
 
 /**
@@ -1203,7 +1222,7 @@ G.prototype.after = function(input) {
 G.prototype.insertAfter = function(input) {
   G(input).after(this);
   return this;
-}
+};
 
 
 /**
@@ -1226,7 +1245,8 @@ G.prototype.before = function(input) {
     });
   }
   return this;
-}
+};
+goog.exportSymbol('G.prototype.before', G.prototype.before);
 
 
 /**
@@ -1236,7 +1256,7 @@ G.prototype.before = function(input) {
 G.prototype.insertBefore = function(input) {
   G(input).before(this);
   return this;
-}
+};
 
 
 /**
@@ -1269,11 +1289,12 @@ G.prototype.html = function(opt_input) {
   } else if (goog.isString(opt_input)) {
     this.each(function(el) {el.innerHTML = opt_input;});
   } else {
-    var html = $(opt_input).outerHTML();
+    var html = G(opt_input).outerHTML();
     this.each(function(el) {el.innerHTML = html;});
   }
   return this;
 };
+goog.exportSymbol('G.prototype.html', G.prototype.html);
 
 
 /**
@@ -1290,9 +1311,9 @@ G.prototype.outerHTML = function() {
           div = null;
           return h;
         })(node);
-  }
+  };
   return this.map(outerHTML).toArray().join('');
-}
+};
 
 
 /**
@@ -1611,5 +1632,11 @@ G.prototype.trigger = function(type, opt_event) {
     }
     el.dispatchEvent(opt_event);
   })
-}
+};
 
+G.prototype.removeAttr = function(attr) {
+  return this.each(function(el) {
+    el.removeAttribute(attr);
+  });
+};
+goog.exportSymbol('G.prototype.removeAttr', G.prototype.removeAttr);
